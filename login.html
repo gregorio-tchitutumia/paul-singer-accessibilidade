@@ -193,5 +193,18 @@
 
   <!-- Cliente WebAuthn -->
   <script src="webauthn-client.js"></script>
+<!-- Botão Acessibilidade -->
+<button id="btn-acess"
+        onclick="document.body.classList.toggle('alto-contraste')"
+        aria-label="Ativar alto contraste"
+        style="position:fixed;bottom:12px;right:12px;padding:10px 14px;border-radius:10px;border:0;box-shadow:0 2px 6px rgba(0,0,0,.2);background:#222;color:#ffd700;font-weight:700;z-index:2147483647;cursor:pointer;">
+  ♿ Alto Contraste
+</button>
+<style>
+  .alto-contraste { background:#000 !important; color:#ff0 !important; }
+  .alto-contraste a { color:#0ff !important; text-decoration: underline; }
+  :focus { outline:3px solid #ffcc00; outline-offset:2px; }
+</style>
+
 </body>
 </html>
