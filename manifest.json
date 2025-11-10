@@ -1,0 +1,25 @@
+{
+  "name": "TJD3S",
+  "short_name": "TJD3S",
+  "description": "TJD3S",
+  "id": "tjd3s",                     // id estável, sem barra/raiz
+  "start_url": "./login.html?from=pwa=1",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1522",
+  "theme_color": "#0f1522",
+  "icons": [
+    {
+      "src": "./assets/fundacentro-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/fundacentro-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Ícones -->
+  <link rel="icon" href="assets/fundacentro-16x16.png" sizes="16x16" type="image/png" />
+  <link rel="icon" href="assets/fundacentro-32x32.png" sizes="32x32" type="image/png" />
+  <link rel="icon" href="assets/fundacentro-64x64.png" sizes="64x64" type="image/png" />
+
+  <!-- Fontes/estilos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="manifest.json" />
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="login.css" />
+
+  <title>TJD3S — Login</title>
+  <style>
+    /* ajustes leves pra UX do Passkey */
+    .form-input small { color:#666; display:block; margin-top:.25rem }
+    #status { margin-top: 1rem; font-weight: 600; }
+    #status.ok { color:#0a7d00 }
+    #status.error { color:#b00020 }
+    button[disabled] { opacity:.6; cursor:not-allowed }
+  </style>
+</head>
+
+<body id="login-page">
+  <!-- loading opcional -->
+  <div id="loading" style="display:none">
+    <div class="loader-container">
+      <div class="loader" id="loader"></div>
+    </div>
+  </div>
+
+  <!-- Cabeçalho -->
+  <div class="top-header">
+    <img src="assets/top-logo.svg" alt="top-logo" />
+    <span class="top-header-phrase">Trabalho Justo, Digno, Solidário, Saudável e Seguro</span>
+  </div>
+
+  <div class="header">
+    <div class="header-icon">
+      <img src="assets/fundacentro.png" alt="fundacentro" />
+    </div>
+    <div class="header-text">
+      <span id="registro_acao">Registro de Ação</span>
+    </div>
+  </div>
+
+  <section class="login-banner-section">
+    <div class="banner-image2">
+      <div class="banner-image-img2">
+        <img src="assets/logo-formacao.svg" alt="logo-formacao" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Formulário WebAuthn ===== -->
+  <section class="form-section">
+    <div class="form-atividade">
+      <div class="form-atividade-inputs">
+        <h2 id="acesso-header">Acesso</h2>
+
+        <div class="form-row-1">
+          <div class="form-input" style="width:100%">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" placeholder="seuemail@dominio.com" autocomplete="username" required />
+            <small>Use o mesmo e-mail do cadastro.</small>
+          </div>
+        </div>
+
+        <div class="form-row-1" style="margin-top:.75rem">
+          <div class="submit">
+            <button id="btnRegister" type="button">Registrar</button>
+            <button id="btnLogin" type="button">Entrar</button>
+            <!-- botão de ir para os termos é criado/mostrado via JS -->
+          </div>
+        </div>
+
+        <div id="status" role="status" aria-live="polite"></div>
+
+        <div id="dados-acesso" style="margin-top:.5rem">
+          <span>Não recebi meus dados de acesso</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rodapé -->
+  <div class="footer">
+    <div class="contatos">
+      <h3>Endereços e contato:</h3>
+      <a href="https://www.gov.br/fundacentro/pt-br">gov.br/fundacentro</a>
+      <a href="https://www.gov.br/trabalho-e-emprego/pt-br">gov.br/trabalho-e-emprego</a>
+      <span>danilo.marinho@fundacentro.gov.br</span>
+      <span>gregorio.tchitutumia@fundacentro.gov.br</span>
+    </div>
+    <div>
+      <img src="assets/footer-logo.svg" alt="footer-logo" />
+    </div>
+  </div>
+
+  <!-- Versão de cache (opcional) -->
+  <script>
+    fetch('pega_cache_version.php')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.versao_cache) {
+          const el = document.getElementById('registro_acao');
+          if (el) el.textContent += ` (${data.versao_cache})`;
+        }
+      })
+      .catch(() => {});
+  </script>
+
+  <!-- ✅ Checagem de termos (habilita/desabilita Entrar/Registrar) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const emailEl = document.getElementById('email');
+      const btnLogin = document.getElementById('btnLogin');
+      const btnRegister = document.getElementById('btnRegister');
+      const statusEl = document.getElementById('status');
+
+      const goTermsBtn = document.createElement('button');
+      goTermsBtn.type = 'button';
+      goTermsBtn.textContent = 'Aceitar Termos';
+      goTermsBtn.style.marginLeft = '8px';
+      goTermsBtn.style.display = 'none';
+      btnLogin.parentElement.appendChild(goTermsBtn);
+
+      function setButtons(enabled) {
+        btnLogin.disabled = !enabled;
+        btnRegister.disabled = !enabled;
+      }
+
+      async function checkTerms() {
+        const email = (emailEl.value || '').trim();
+        setButtons(false);
+        goTermsBtn.style.display = 'none';
+        statusEl.textContent = '';
+        statusEl.className = '';
+
+        if (!email) return;
+
+        try {
+          const r = await fetch('php/terms_status.php?email=' + encodeURIComponent(email));
+          const data = await r.json();
+          if (!data.ok) throw new Error(data.error || 'Erro');
+
+          if (!data.found) {
+            statusEl.className = 'error';
+            statusEl.textContent = 'E-mail não cadastrado.';
+            return;
+          }
+
+          // guarda id_pessoa para a tela de termos
+          localStorage.setItem('id_pessoa', String(data.id_pessoa || ''));
+
+          if (data.accepted) {
+            statusEl.className = 'ok';
+            statusEl.textContent = 'Termos aceitos.';
+            setButtons(true);
+          } else {
+            statusEl.className = 'error';
+            statusEl.textContent = 'É necessário aceitar os Termos antes de entrar.';
+            goTermsBtn.style.display = 'inline-block';
+            setButtons(false);
+          }
+        } catch (e) {
+          statusEl.className = 'error';
+          statusEl.textContent = 'Falha ao verificar termos. Tente novamente.';
+        }
+      }
+
+      // eventos
+      emailEl.addEventListener('blur', checkTerms);
+      emailEl.addEventListener('input', () => {
+        setButtons(false);
+        goTermsBtn.style.display = 'none';
+        statusEl.textContent = '';
+        statusEl.className = '';
+      });
+      goTermsBtn.addEventListener('click', () => { window.location.href = 'termos.html'; });
+
+      // estado inicial
+      setButtons(false);
+    });
+  </script>
+
+  <!-- Cliente WebAuthn -->
+  <script src="webauthn-client.js"></script>
+</body>
+</html>
